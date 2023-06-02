@@ -1,0 +1,288 @@
+---
+title: "Parental loss from drugs and firearms"
+subtitle: "A cause-specific, two sex, and time-varying matrix kinship model"
+author: "Ben Schlüter"
+date: "2023-05-15"
+toc: true
+output: 
+        pdf_document:
+                extra_dependencies: ["float"]
+bibliography: refs.bib
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "H", out.extra = "")
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
+
+## Load packages ---------------------------------------------------------------
+
+## Install/load packages
+packages <- c("tidyverse", "ggplot2", "here", "viridis")
+for(p in packages){
+        if(!require(p,character.only = TRUE)) install.packages(p)
+        library(p,character.only = TRUE)
+}
+
+
+
+## Load data -------------------------------------------------------------------
+
+lt.US <- readRDS(here("data_private", "lt_US.rda"))
+fx.US <- readRDS(here("data", "fx_US.rda"))
+mac.US <- readRDS(here("data", "mac_US.rda"))
+
+
+## Mortality data from Matt
+df.dth <- readRDS(here("data_private",  
+                       "state_year_age-sex-race_drug-opioid-mortality.RDS")) %>% 
+        rename("age" = age_years) %>% 
+        dplyr::select(!c(st_fips, division))
+
+## Kin dynamics
+df.prop.dth <- readRDS(here("data_private", "df_prop_dth.rda"))
+df.prob.ber.parents <- readRDS(here("data_private", "df_prob_ber_parents.rda"))
+df.prob.ber <- readRDS(here("data_private", "df_prob_ber.rda"))
+
+
+```
+
+# Exploratory data analysis
+
+## Mortality
+
+```{r mx-all, warning = FALSE, fig.cap = "Mortality rates all causes"}
+## MX all-causes 
+lt.US %>% 
+        ggplot(aes(x = age, y = mx, group = year)) +
+        facet_grid(sex ~ race_eth) +
+        geom_line(aes(col = year)) +
+        theme_bw() +
+        scale_y_log10() +
+        labs(y = "mx (log-scale)")
+
+```
+
+```{r mx-other, warning = FALSE, fig.cap = "Mortality rates all causes except drugs and firearms"}
+## Mx all-causes other than drugs & firearms
+lt.US %>% 
+        mutate(mx_other = (n_deaths - (n_drug + n_firearm))/pop) %>% 
+        ggplot(aes(x = age, y = mx_other, group = year)) +
+        facet_grid(sex ~ race_eth) +
+        geom_line(aes(col = year)) +
+        theme_bw() +
+        scale_y_log10() +
+        labs(y = "mx (log-scale)")
+
+```
+
+```{r mx-drugs, warning = FALSE, fig.cap = "Mortality rates from drugs"}
+## Mx drugs
+lt.US %>% 
+        mutate(mx_drug = n_drug/pop) %>% 
+        ggplot(aes(x = age, y = mx_drug, group = year)) +
+        facet_grid(sex ~ race_eth) +
+        geom_line(aes(col = year)) +
+        theme_bw() +
+        labs(y = "mx drugs")
+
+```
+
+```{r mx-firearms, warning = FALSE, fig.cap = "Mortality rates from firearms"}
+## Mx firearms
+lt.US %>% 
+        mutate(mx_firearm = n_firearm/pop) %>% 
+        ggplot(aes(x = age, y = mx_firearm, group = year)) +
+        facet_grid(sex ~ race_eth) +
+        geom_line(aes(col = year)) +
+        theme_bw() +
+        labs(y = "mx firearms")
+
+```
+
+* Stochasticity in $m_x$ for Aian suggests to drop this ethnic group from the analysis.
+
+```{r e0, warning = FALSE, fig.cap = "Life expectancy at birth"}
+## Life expectancy at birth
+lt.US %>% 
+        filter(age == 0) %>% 
+        ggplot(aes(x = year, y = ex, group = race_eth, col = race_eth)) +
+        facet_wrap(~ sex) +
+        geom_line(linewidth = 1) +
+        geom_line(aes(y = ifelse(race_eth == "total", ex, NA)), linewidth = 2) +
+        theme_bw() +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        labs(y = expression(e^0),
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+
+## Fertility
+
+```{r mac, warning = FALSE, fig.cap = "Modeled vs observed difference in mean age at childbearing"}
+## Modelled difference in MAC
+## vs observed MAC
+ggplot(mac.US) +
+        geom_point(aes(x = year, y = diff.mac)) +
+        geom_line(aes(x = year, y = fit, group = 1)) +
+        theme_minimal() +
+        labs(y = "Difference in mean age at childbearing",
+             x = "Year")
+
+```
+
+* Male $f_x$ are obtained by shifting female $f_x$ for each ethnic group. Currently, the shift equals the difference in mean age at childbearing (MAC) at the national level and is allowed to vary over the years. Only five years were available from the UN Demographic Yearbooks. The pattern was pretty linear so I got a shift for all years by fitting a linear model (plotted line) on the available years (plotted points). The decrease in the difference in MAC is in line with @Schoumaker2019.
+
+
+
+# Results
+
+* Results focus on Black, White, and Hispanic.
+
+    * High stochasticity in $m_x$ by cause for Aian
+    * No fertility rates in the year 2020 for Api and important stochasticity in $m_x$ by cause
+
+```{r prop, warning = FALSE, fig.cap = "Proportion of parents' death"}
+## Proportional parents deaths by cause
+df.prop.dth %>% 
+        filter(cause != "other") %>% 
+        ggplot(aes(x = year, y = prop, group = race)) +
+        facet_grid(cause ~ focal.age) +
+        geom_line(aes(col = race), linewidth = 1) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, 
+                                         hjust = 0.7)) +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        labs(y = "Proportion of parents' death",
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+
+```{r prob-log, warning = FALSE, fig.cap = "Probability of losing one or more parent (log-scale)"}
+## Prob of bereavement
+## Sum cause-specific probability of losing a parent
+df.prob.ber.parents.1 <- df.prob.ber.parents %>% 
+        filter(cause != "other") %>% 
+        group_by(focal.age, year, race) %>% 
+        summarise(prob = sum(prob)) %>% 
+        ungroup() %>% 
+        mutate(cause = "drugs & firearms")
+
+## Cause-specific probability of losing a parent       
+bind_rows(df.prob.ber.parents %>% 
+                  filter(cause != "other"),
+          ## Add drugs & firearms together
+          df.prob.ber.parents.1) %>% 
+        mutate(cause = factor(cause,
+                              levels = c("drugs", "firearms", "drugs & firearms"))) %>% 
+        ggplot(aes(x = year, y = prob, group = race)) +
+        facet_grid(cause ~ focal.age) +
+        geom_line(aes(col = race), linewidth = 1) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, 
+                                         hjust = 0.7)) +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        scale_y_log10() +
+        labs(y = "Probability of losing one or more parent (log-scale)",
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+```{r prob, warning = FALSE, fig.cap = "Probability of losing one or more parent"}
+## Prob of bereavement
+## Cause-specific probability of losing a parent       
+bind_rows(df.prob.ber.parents %>% 
+                  filter(cause != "other"),
+          ## Add drugs & firearms together
+          df.prob.ber.parents.1) %>% 
+        mutate(cause = factor(cause,
+                              levels = c("drugs", "firearms", "drugs & firearms"))) %>% 
+        ggplot(aes(x = year, y = prob, group = race)) +
+        facet_grid(cause ~ focal.age) +
+        geom_line(aes(col = race), linewidth = 1) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, 
+                                         hjust = 0.7)) +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        labs(y = "Probability of losing one or more parent",
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+
+```{r prob-sex, warning = FALSE, fig.cap = "Probability of losing a parent (log-scale)"}
+## Prob of bereavement by parent
+## Sum cause-specific probability of losing a parent
+df.prob.ber.sum <- df.prob.ber %>% 
+        filter(cause != "other") %>% 
+        group_by(sex, focal.age, year, race) %>% 
+        summarise(prob = sum(prob)) %>% 
+        ungroup() %>% 
+        mutate(cause = "drugs & firearms")
+
+bind_rows(df.prob.ber %>% 
+                  filter(cause != "other"),
+          ## Add drugs & firearms together
+          df.prob.ber.sum) %>% 
+        mutate(cause = factor(cause,
+                              levels = c("drugs", "firearms", "drugs & firearms"))) %>% 
+        ggplot(aes(x = year, y = prob, group = race)) +
+        facet_grid(cause ~ focal.age + sex) +
+        geom_line(aes(col = race), linewidth = 1) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, 
+                                         hjust = 0.7)) +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        scale_y_log10() +
+        labs(y = "Probability of losing a parent (log-scale)",
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+
+
+
+
+# References
+
+
+<div id="refs"></div>
+
+
+
+
+
