@@ -1,0 +1,411 @@
+---
+title: "Parental loss from drugs and firearms in the US"
+subtitle: "A matrix kinship model approach"
+author: "Benjamin Schlüter"
+format: 
+        revealjs:
+          self-contained: true
+          slide-number: true
+editor: visual
+bibliography: refs.bib
+nocite: |
+  @*
+---
+
+## Matrix Kinship model
+
+Kin dynamics: parents of Focal
+
+- Cause-specific (drugs, firearms, other) mortality [@Caswell2023]
+    - Track parents' deaths by age and cause
+- Two-sex: male fertility = shifted female fertility [@Schoumaker2019]
+- Time-variant rates (2000-2020)
+
+
+Model run independently on each ethnic group (Hispanic, Black, White)
+
+## Parents dynamic - set-up
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig-width: 14
+#| fig-height: 10
+library(ggplot2)
+ggplot() +
+        ## Arrays
+        geom_rect(aes(xmin = 35, xmax = 45, ymin = 35, ymax = 45),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 17, xmax = 27, ymin = 17, ymax = 27),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 5, xmax = 15, ymin = 5, ymax = 15),
+                  color = "black", fill = NA) +
+        ## Vector of age distribution of parents
+        geom_rect(aes(xmin = 5, xmax = 6, ymin = 5, ymax = 15),
+                  color = "black", fill = "orange") +
+        geom_rect(aes(xmin = 6, xmax = 7, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 7, xmax = 8, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 8, xmax = 9, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 9, xmax = 10, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 10, xmax = 11, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 11, xmax = 12, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 12, xmax = 13, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 13, xmax = 14, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 14, xmax = 15, ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        geom_rect(aes(xmin = 17, xmax = 18, ymin = 17, ymax = 27),
+                  color = "black", fill = "orange") +
+        geom_rect(aes(xmin = 35, xmax = 36, ymin = 35, ymax = 45),
+                  color = "black", fill = "orange") +
+        ## From one age to the next
+        geom_curve(aes(x = seq(5.5, 13.5, 1), y = 4.5, xend = seq(6.5, 14.5, 1), yend = 4.5),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = 2, col = "red") +
+        ## Type of Leslie matrix
+        annotate("text", x = c(10, 1), y = c(17, 10), 
+                 label = c("Child age", "Parents' age"),
+                 color = c("cyan", "blue"),
+                 size = 6) +
+        ## Year dim
+        annotate("text", x = c(12, 24, 42), y = c(13, 25, 43), 
+                 label = c("year 2000", "year 2001", "year 2020"),
+                 color = "green",
+                 size = 6) +
+        geom_point(aes(x = c(29:33), y = c(29:33))) +
+        scale_x_continuous(breaks = seq(0, 50, 5), limits = c(0, 50)) +
+        scale_y_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
+        theme_minimal() +
+        theme(axis.title = element_blank(),
+              axis.text = element_blank())
+```
+:::
+
+::: {.column width="40%"}
+Boundary conditions \
+
+[1.]{style="color:red;"} Stable population assumption in the years $\leq 2000$ \
+
+[2.]{style="color:orange;"} $\boldsymbol{\pi_t} = \frac{\boldsymbol{F_t}(1,:)^T \circ \boldsymbol{n_t}}{||\boldsymbol{F_t}(1,:)^T \circ \boldsymbol{n_t}||}$
+:::
+:::
+
+## Parents dynamic - projection
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig-width: 14
+#| fig-height: 10
+ggplot() +
+        ## Arrays
+        geom_rect(aes(xmin = 35, xmax = 45, ymin = 35, ymax = 45),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 17, xmax = 27, ymin = 17, ymax = 27),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 5, xmax = 15, ymin = 5, ymax = 15),
+                  color = "black", fill = NA) +
+        ## Vector of age distribution of parents
+        geom_rect(aes(xmin = 5, xmax = 6, ymin = 5, ymax = 15),
+                  color = "black", fill = "purple") +
+        geom_rect(aes(xmin = 18, xmax = 19, ymin = 17, ymax = 27),
+                  color = "black", fill = "purple") +
+        geom_rect(aes(xmin = 41, xmax = 42, ymin = 35, ymax = 45),
+                  color = "black", fill = "purple") +
+        ## From one year to the next
+        geom_curve(aes(x = 5.5, y = 15.5, xend = 18.5, yend = 27.5),
+                   arrow = arrow(length = unit(0.03, "npc"),
+                                 type = "closed"),
+                   curvature = -0.3) +
+        geom_curve(aes(x = 18.7, y = 27.5, xend = 30, yend = 32),
+                   arrow = arrow(length = unit(0.03, "npc"),
+                                 type = "closed"),
+                   curvature = -0.3) +
+        geom_curve(aes(x = 33, y = 36, xend = 41.5, yend = 45.5),
+                   arrow = arrow(length = unit(0.03, "npc"),
+                                 type = "closed"),
+                   curvature = -0.4) +
+        ## Type of Leslie matrix
+        annotate("text", x = c(10, 1), y = c(17, 10), 
+                 label = c("Child age", "Parents' age"),
+                 color = c("cyan", "blue"),
+                 size = 6) +
+        ## Year dim
+        annotate("text", x = c(12, 24, 42), y = c(13, 25, 43), 
+                 label = c("year 2000", "year 2001", "year 2020"),
+                 color = "green",
+                 size = 6) +
+        ## Child age and parents age dim
+        annotate("text", x = c(11, 25, 37), y = c(33, 39, 50), 
+                 label = c(expression(n[paste("x=0", ",", "t=2000")]*tilde(U)[paste("t", "=", "2000")]), expression(n[paste("x=1", ",", "t=2001")]*tilde(U)[paste("t", "=", "2001")]), expression(n[paste("x=19", ",", "t=2019")]*tilde(U)[paste("t", "=", "2019")])),
+                 size = 7) +
+        geom_point(aes(x = c(29:33), y = c(29:33))) +
+        scale_x_continuous(breaks = seq(0, 50, 5), limits = c(0, 50)) +
+        scale_y_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
+        theme_minimal() +
+        theme(axis.title = element_blank(),
+              axis.text = element_blank())
+```
+
+:::
+
+::: {.column width="40%"}
+
+- Block-structured survival matrix ($\tilde{U}$)
+
+- A block for cause-specific probabilities of dying ($\hat{M}$) 
+    
+- $vec$ operator to stack alive and dead parents together
+
+:::
+:::
+
+## Different perspectives
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 8
+ggplot() +
+        ## Arrays
+        geom_rect(aes(xmin = 35, xmax = 45, ymin = 35, ymax = 45),
+                  color = "black", fill = NA) +
+        ## Period perspective
+        geom_rect(aes(xmin = 17, xmax = 27, ymin = 17, ymax = 27),
+                  color = "darkgreen", fill = NA, linewidth = 1.5) +
+        geom_rect(aes(xmin = 5, xmax = 15, ymin = 5, ymax = 15),
+                  color = "black", fill = NA) +
+        ## Cohort perspective
+        geom_rect(aes(xmin = 5, xmax = 6, ymin = 5, ymax = 15),
+                  color = "black", fill = "blue") +
+        geom_rect(aes(xmin = 18, xmax = 19, ymin = 17, ymax = 27),
+                  color = "black", fill = "blue") +
+        geom_rect(aes(xmin = 40, xmax = 41, ymin = 35, ymax = 45),
+                  color = "black", fill = "blue") +
+        ## Age perspective
+        geom_rect(aes(xmin = 11, xmax = 12, ymin = 5, ymax = 15),
+                  color = "black", fill = "pink") +
+        geom_rect(aes(xmin = 23, xmax = 24, ymin = 17, ymax = 27),
+                  color = "black", fill = "pink") +
+        geom_rect(aes(xmin = 41, xmax = 42, ymin = 35, ymax = 45),
+                  color = "black", fill = "pink") +
+        ## Year dim
+        annotate("text", x = c(13, 25, 43), y = c(13, 25, 43), 
+                 label = c("year 0", "year 1", "year T"),
+                 color = "green",
+                 size = 6) +
+        ## Child age and parents age dim
+        annotate("text", x = c(10, 1), y = c(17, 10), 
+                 label = c("Child age", "Parents' age"),
+                 color = c("red", "blue"),
+                 size = 6) +
+        geom_point(aes(x = c(29:33), y = c(29:33))) +
+        scale_x_continuous(breaks = seq(0, 50, 5), limits = c(0, 50)) +
+        scale_y_continuous(breaks = seq(0, 50, 5), limits = c(0, 50)) +
+        theme_minimal() +
+        theme(axis.title = element_blank(),
+              axis.text = element_blank())
+```
+:::
+
+::: {.column width="50%"}
+[Period]{style="color:green;"} \
+
+- Proportion of parents dying from cause $i$
+- Bereavement probability from cause $i$
+    
+[Cohort]{style="color:blue;"} \
+
+- Parental loss at population level [@alburez2021women]
+    
+[Age]{style="color:pink;"}
+:::
+:::
+
+
+## Parental loss (PL) at population level
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 8
+library(LexisPlotR)
+library(tidyverse)
+
+polygons <- data.frame(x = c("2000-01-01", "2001-01-01", "2001-01-01", "2000-01-01",
+                             "2001-01-01", "2002-01-01", "2002-01-01", "2001-01-01",
+                             "2002-01-01", "2003-01-01", "2003-01-01", "2002-01-01",
+                             "2003-01-01", "2004-01-01", "2004-01-01", "2003-01-01",
+                             "2004-01-01", "2005-01-01", "2005-01-01", "2004-01-01"),
+                       y = c(0, 0, 1, 1,
+                             1, 1, 2, 2,
+                             2, 2, 3, 3,
+                             3, 3, 4, 4,
+                             4, 4, 5, 5),
+                       group = c(rep(1, 4), rep(2, 4), rep(3, 4), rep(4,4), rep(5, 4)))
+
+lexis <- lexis_grid(year_start = 2000, year_end = 2005, age_start = 0, age_end = 5) %>% 
+        lexis_cohort(cohort = 2000) %>% 
+        lexis_polygon(x = polygons$x, y = polygons$y, group = polygons$group)
+lexis <- lexis + labs(x = "Year", y = "Age")
+lexis
+
+
+```
+:::
+
+::: {.column width="50%"}
+
+1. Fraction of cohort surviving ($l_{x}$) from period mortality rates, both sexes combined 
+
+2. Births ($B$) 
+
+3. Nber of deaths by cause at age $x$ ($d_D(x)$) from matrix kinship model
+
+$PL_x = (l_{x}*B)*d_D(x)$ 
+
+:::
+:::
+
+## Incorporating uncertainty
+
+UN WPP:
+
+- Use each posterior draw for each component in a cohort-component model 
+
+But
+
+- Stochasticity in vital rates $\neq$ stochasticity from a small population (parents)
+
+
+# Results
+
+---
+
+```{r}
+#| echo: false
+
+library(here)
+
+## Load data -------------------------------------------------------------------
+
+df.prop.dth <- readRDS(here("data_private", "df_prop_dth.rda"))
+df.prob.ber.parents <- readRDS(here("data_private", "df_prob_ber_parents.rda"))
+df.prob.ber <- readRDS(here("data_private", "df_prob_ber.rda"))
+df.children.losing.parent <- readRDS(here("data_private", "df_children_losing_parent.rda"))
+
+```
+
+```{r}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 8
+#| 
+## Proportional parents deaths by cause
+df.prop.dth %>% 
+        filter(cause != "other") %>% 
+        ggplot(aes(x = year, y = prop, group = race)) +
+        facet_grid(cause ~ focal.age) +
+        geom_line(aes(col = race), linewidth = 1) +
+        theme_bw() +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        labs(y = "Proportion of parents' death",
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+
+---
+
+```{r}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 8
+#| 
+## Prob of bereavement
+## Sum cause-specific probability of losing a parent
+df.prob.ber.parents.1 <- df.prob.ber.parents %>% 
+        filter(cause != "other") %>% 
+        group_by(focal.age, year, race) %>% 
+        summarise(prob = sum(prob)) %>% 
+        ungroup() %>% 
+        mutate(cause = "drugs & firearms")
+
+## Cause-specific probability of losing a parent       
+bind_rows(df.prob.ber.parents %>% 
+                  filter(cause != "other"),
+          ## Add drugs & firearms together
+          df.prob.ber.parents.1) %>% 
+        mutate(cause = factor(cause,
+                              levels = c("drugs", "firearms", "drugs & firearms"))) %>% 
+        ggplot(aes(x = year, y = prob, group = race)) +
+        facet_grid(cause ~ focal.age) +
+        geom_line(aes(col = race), linewidth = 1) +
+        theme_bw() +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        scale_y_log10() +
+        labs(y = "Probability of losing one or more parent (log-scale)",
+             x = "Year",
+             col = "Race/ethnic group")
+
+```
+
+---
+
+```{r}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 8
+#| 
+## Children losing a parent
+df.children.losing.parent %>% 
+        filter(cause != "other") %>% 
+        group_by(cause, sex, race, year) %>% 
+        summarise(N = sum(N)) %>% 
+        ggplot(aes(x = year, y = N, group = interaction(sex, race))) +
+        facet_wrap(~ cause) +
+        geom_line(aes(col = race, linetype = sex),
+                  linewidth = 1) +
+        theme_bw() +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        labs(y = "Children <5 yo losing a parent",
+             x = "Year")
+
+```
+
+
+
+## References
+
+::: {#refs}
+:::

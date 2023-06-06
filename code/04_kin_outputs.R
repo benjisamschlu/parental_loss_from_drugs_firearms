@@ -35,6 +35,15 @@ for(p in packages){
 
 lt.US <- readRDS(here("data_private", "lt_US.rda"))
 d_x_t <- readRDS(here("data_private", "d_x_t.rda"))
+fx.US <- readRDS(here("data", "fx_US.rda"))
+
+
+
+## Functions -------------------------------------------------------------------
+
+## Script containing the functions computing
+## the main elements required to run the kin dynamics
+source(here("code", "fct_matrix_kinship_model.R"))
 
 
 
@@ -332,4 +341,25 @@ saveRDS(df.prob.ber,
 #         geom_point() +
 #         theme_bw()
 
+
+
+## Number of children losing a parent ------------------------------------------
+
+df.children.losing.parent <- tibble()
+
+options(dplyr.summarise.inform = FALSE)
+
+for (r in races) {
+        ## Cohort perspective requires to stop in 2017
+        ## when focusing on children aged <5 yo
+        for (y in head(years, -3)) {
+
+               df.temp <- get_df_nber_children(y, r, lt.US, fx.US) 
+               df.children.losing.parent <- rbind(df.children.losing.parent, df.temp)
+        }
+}
+
+## Save outputs
+saveRDS(df.children.losing.parent,
+        here("data_private", "df_children_losing_parent.rda"))
 

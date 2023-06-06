@@ -33,7 +33,7 @@ for(p in packages){
 df.prop.dth <- readRDS(here("data_private", "df_prop_dth.rda"))
 df.prob.ber.parents <- readRDS(here("data_private", "df_prob_ber_parents.rda"))
 df.prob.ber <- readRDS(here("data_private", "df_prob_ber.rda"))
-
+df.children.losing.parent <- readRDS(here("data_private", "df_children_losing_parent.rda"))
 
 
 ## Figures ---------------------------------------------------------------------
@@ -139,4 +139,23 @@ bind_rows(df.prob.ber %>%
              x = "Year",
              col = "Race/ethnic group")
 
+
+## Children losing a parent
+df.children.losing.parent %>% 
+        filter(cause != "other") %>% 
+        group_by(cause, sex, race, year) %>% 
+        summarise(N = sum(N)) %>% 
+        ggplot(aes(x = year, y = N, group = interaction(sex, race))) +
+        facet_wrap(~ cause) +
+        geom_line(aes(col = race, linetype = sex),
+                  linewidth = 1) +
+        theme_bw() +
+        scale_color_manual(values = c("aian" = "#440154FF",
+                                      "api" = "#3B528BFF",
+                                      "black" = "#21908CFF",
+                                      "hispanic" = "#5DC863FF",
+                                      "white" = "#FDE725FF",
+                                      "total" = "#000000")) +
+        labs(y = "Children <5 yo losing a parent",
+             x = "Year")
 
