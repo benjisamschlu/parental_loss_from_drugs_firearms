@@ -16,11 +16,10 @@ nocite: |
 
 Kin dynamics: parents of Focal
 
-- Cause-specific (drugs, firearms, other) mortality [@Caswell2023]
-    - Track parents' deaths by age and cause
-- Two-sex: male fertility = shifted female fertility [@Schoumaker2019]
-- Time-variant rates (2000-2020)
-
+-   Cause-specific (drugs, firearms, other) mortality [@Caswell2023]
+    -   Track parents' deaths by age and cause
+-   Two-sex: male fertility = shifted female fertility [@Schoumaker2019]
+-   Time-variant rates (2000-2020)
 
 Model run independently on each ethnic group (Hispanic, Black, White)
 
@@ -91,9 +90,9 @@ ggplot() +
 :::
 
 ::: {.column width="40%"}
-Boundary conditions \
+Boundary conditions\
 
-[1.]{style="color:red;"} Stable population assumption in the years $\leq 2000$ \
+[1.]{style="color:red;"} Stable population assumption in the years $\leq 2000$\
 
 [2.]{style="color:orange;"} $\boldsymbol{\pi_t} = \frac{\boldsymbol{F_t}(1,:)^T \circ \boldsymbol{n_t}}{||\boldsymbol{F_t}(1,:)^T \circ \boldsymbol{n_t}||}$
 :::
@@ -156,17 +155,14 @@ ggplot() +
         theme(axis.title = element_blank(),
               axis.text = element_blank())
 ```
-
 :::
 
 ::: {.column width="40%"}
+-   Block-structured survival matrix ($\tilde{U}$)
 
-- Block-structured survival matrix ($\tilde{U}$)
+-   A block for cause-specific probabilities of dying ($\hat{M}$)
 
-- A block for cause-specific probabilities of dying ($\hat{M}$) 
-    
-- $vec$ operator to stack alive and dead parents together
-
+-   $vec$ operator to stack alive and dead parents together
 :::
 :::
 
@@ -221,19 +217,18 @@ ggplot() +
 :::
 
 ::: {.column width="50%"}
-[Period]{style="color:green;"} \
+[Period]{style="color:green;"}\
 
-- Proportion of parents dying from cause $i$
-- Bereavement probability from cause $i$
-    
-[Cohort]{style="color:blue;"} \
+-   Proportion of parents dying from cause $i$
+-   Bereavement probability from cause $i$
 
-- Parental loss at population level [@alburez2021women]
-    
+[Cohort]{style="color:blue;"}\
+
+-   Parental loss at population level [@alburez2021women]
+
 [Age]{style="color:pink;"}
 :::
 :::
-
 
 ## Parental loss (PL) at population level
 
@@ -269,15 +264,13 @@ lexis
 :::
 
 ::: {.column width="50%"}
+1.  Fraction of cohort surviving ($l_{x}$) from period mortality rates, both sexes combined
 
-1. Fraction of cohort surviving ($l_{x}$) from period mortality rates, both sexes combined 
+2.  Births ($B$)
 
-2. Births ($B$) 
+3.  Nber of deaths by cause at age $x$ ($d_D(x)$) from matrix kinship model
 
-3. Nber of deaths by cause at age $x$ ($d_D(x)$) from matrix kinship model
-
-$PL_x = (l_{x}*B)*d_D(x)$ 
-
+$PL_x = (l_{x}*B)*d_D(x)$
 :::
 :::
 
@@ -285,16 +278,15 @@ $PL_x = (l_{x}*B)*d_D(x)$
 
 UN WPP:
 
-- Use each posterior draw for each component in a cohort-component model 
+-   Use each posterior draw for each component in a cohort-component model
 
 But
 
-- Stochasticity in vital rates $\neq$ stochasticity from a small population (parents)
-
+-   Stochasticity in vital rates $\neq$ stochasticity from a small population (parents)
 
 # Results
 
----
+------------------------------------------------------------------------
 
 ```{r}
 #| echo: false
@@ -334,8 +326,7 @@ df.prop.dth %>%
 
 ```
 
-
----
+------------------------------------------------------------------------
 
 ```{r}
 #| echo: false
@@ -375,7 +366,7 @@ bind_rows(df.prob.ber.parents %>%
 
 ```
 
----
+------------------------------------------------------------------------
 
 ```{r}
 #| echo: false
@@ -402,8 +393,6 @@ df.children.losing.parent %>%
              x = "Year")
 
 ```
-
-
 
 ## References
 

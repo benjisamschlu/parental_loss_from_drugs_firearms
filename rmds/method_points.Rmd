@@ -1,0 +1,226 @@
+---
+title: "Parental loss from drugs and firearms"
+subtitle: "Methodological points"
+author: "Ben Schlüter"
+date: "2023-06-08"
+toc: true
+output: 
+        pdf_document:
+                extra_dependencies: ["float"]
+bibliography: refs.bib
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "H", out.extra = "")
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
+
+## Load packages ---------------------------------------------------------------
+
+## Install/load packages
+packages <- c("tidyverse", "ggplot2", "here", "viridis")
+for(p in packages){
+        if(!require(p,character.only = TRUE)) install.packages(p)
+        library(p,character.only = TRUE)
+}
+
+```
+
+
+
+# Matrix Kinship model
+
+Kin: parents
+
+-   Cause-specific (drugs, firearms, other) mortality [@Caswell2023]
+    -   Track parents' deaths by age and cause
+-   Two-sex: male fertility = shifted female fertility [@Schoumaker2019]
+-   Time-variant rates (2000-2020)
+
+Model run independently on each ethnic group (Hispanic, Black, White)
+
+* $\boldsymbol{F_t}$ is the $(\omega \cdot \omega)$ fertility matrix, in year $t$. The first row contains the fertility rates at the different ages.
+
+* $\boldsymbol{\tilde{U_t}}$ is a block-matrix containing the survival probabilities and cause-specific probabilities of dying, in year $t$.
+
+* $\omega$ is the highest age group + 1, here 86.
+
+
+
+# Boundary conditions of the parents' dynamic
+
+In Figure 1, color code is 
+
+* \textcolor{orange}{boundary condition 1} 
+
+* \textcolor{red}{boundary condition 2}
+
+* \textcolor{darkgray}{dynamic of the age distribution of parents}
+
+```{r bnd-cond, warning=F, fig.cap="Boundary conditions of the parents' dynamic"}
+ggplot() +
+        ## Arrays
+        geom_rect(aes(xmin = 45, xmax = 55, ymin = 45, ymax = 55),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 29, xmax = 39, ymin = 29, ymax = 39),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 17, xmax = 27, ymin = 17, ymax = 27),
+                  color = "black", fill = NA) +
+        geom_rect(aes(xmin = 5, xmax = 15, ymin = 5, ymax = 15),
+                  color = "black", fill = NA) +
+        ## Vector of age distribution of parents
+        geom_rect(aes(xmin = c(5,17,29), xmax = c(6,18,30), ymin = c(5,17,29), ymax = c(15, 27, 39)),
+                  color = "black", fill = "orange") +
+        ## Boundary condition for the year 2000
+        geom_rect(aes(xmin = seq(6, 14, 1), xmax = seq(7, 15, 1), ymin = 5, ymax = 15),
+                  color = "black", fill = "red") +
+        ## Meaning of vector
+        geom_rect(aes(xmin = 20, xmax = 21, ymin = 17, ymax = 27),
+                  color = "black", fill = "darkgray") +
+        annotate("text", x = 30, y = 10, 
+                 label = "Vector of age distribution of parents (alive & dead by cause)\n at age x+1 of their child in year t+1",
+                 size = 2.5) +
+        annotate("text", x = 7.5, y = 16, 
+                 label = expression(n[x*paste(",")*t]),
+                 size = 2.5) +
+        annotate("text", x = 20.5, y = 28, 
+                 label = expression(n[x+1*paste(",")*t+1]),
+                 size = 2.5) +
+        ## Evolution of vector
+        geom_curve(aes(x = 7.5, y = 17, xend = 19.5, yend = 29),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = -0.4) +
+        geom_curve(aes(x = 20.5, y = 22, xend = 25, yend = 14),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = 0) +
+        geom_rect(aes(xmin = 33, xmax = 34, ymin = 29, ymax = 39),
+                  color = "black", fill = "darkgray") +
+        annotate("text", x = 33.5, y = 41, 
+                 label = expression(n[x+2*paste(",")*t+2]),
+                 size = 2.5) +
+        geom_curve(aes(x = 21, y = 29, xend = 33, yend = 42),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = -0.4) +
+        geom_curve(aes(x = 33.5, y = 43, xend = 42, yend = 43),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = -0.4) +
+        annotate("text", x = 10, y = 27, 
+                 label = expression(n[x*paste(",")*t]%.%tilde(U)[paste("t")]),
+                 size = 2.5) +
+        annotate("text", x = 24, y = 42, 
+                 label = expression(n[x+1*paste(",")*t+1]%.%tilde(U)[paste("t+1")]),
+                 size = 2.5) +
+        annotate("text", x = 37, y = 47, 
+                 label = expression(n[x+2*paste(",")*t+2]%.%tilde(U)[paste("t+2")]),
+                 size = 2.5) +
+        geom_rect(aes(xmin = 52, xmax = 53, ymin = 45, ymax = 55),
+                  color = "black", fill = "darkgray") +
+        annotate("text", x = 45, y = 58, 
+                 label = expression(n[x+(T-1)*paste(",")*T-1]%.%tilde(U)[paste("T-1")]),
+                 size = 2.5) +
+        geom_curve(aes(x = 43, y = 45, xend = 52, yend = 56),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = -0.4) +
+        ## From one age to the next in boundary condition
+        geom_curve(aes(x = seq(5.5, 13.5, 1), y = 4.5, xend = seq(6.5, 14.5, 1), yend = 4.5),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = 2, col = "red") +
+        ## Age distribution of parents of offsprings
+        geom_curve(aes(x = 8, y = 40, xend = c(5.5, 17.5, 29.5), yend = c(10,22,34)),
+                   arrow = arrow(length = unit(0.01, "npc"),
+                                 type = "closed"),
+                   curvature = 0, col = "orange") +
+        annotate("text", x = 5, y = 46, 
+                 label = expression(pi[t]*paste(" = ")*frac(F[t]^T*paste("(1,:)")%.%n[t], paste("|| ")*F[t]^T*paste("(1,:)")%.%n[t]*paste(" ||"))),
+                 size = 3,
+                 col = "orange") +
+        ## U_tilde matrix
+        annotate("text", x = seq(6.5, 14.5, 2.5), y = 0, 
+                 label = rep(expression(tilde(U)[paste("2000")]), 4),
+                 size = 2.5,
+                 col = "red") +
+        ## Dim
+        annotate("text", x = c(11.5, 1), y = c(17, 10), 
+                 label = c("Child age", "Parents' age"),
+                 color = c("cyan", "blue"),
+                 size = 3) +
+        ## Year dim
+        annotate("text", x = c(12, 24, 36, 52), y = c(13, 25, 37, 53), 
+                 label = c("year 2000", "year 2001", "year 2002", "year 2020"),
+                 color = "green",
+                 size = 3) +
+        geom_point(aes(x = c(41:44), y = c(41:44))) +
+        scale_x_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
+        scale_y_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
+        theme_minimal() +
+        theme(axis.title = element_blank(),
+              axis.text = element_blank())
+```
+
+
+
+## Boundary condition 1
+
+Focusing on parents means that fertility enters the model only through the first boundary condition: the age distribution of parents at the birth of their child (\textcolor{orange}{$\pi_t$}). 
+
+Currently, the kin dynamics consists of a full two-sex model ($\boldsymbol{F^f_t}$ and $\boldsymbol{F^m_t}$). Male fertility rates = shifted female fertility rates. The shift is equal to the difference in the mean age at childbearing between the two sexes. The shifts are modeled with a linear model over the years (data from the UN Demographic Yearbook).\
+
+* Sensitivity analysis: use female fertility rates to compute both female and male age distribution at the birth of their children.
+
+
+
+## Boundary condition 2
+
+In order to start the dynamics, we assume that the earliest vital rates have been operating for a long period before the year 2000. This means that in order to obtain the vector of the age distribution of parents at age $x$ of their child in the year 2000, we assume
+
+$$\boldsymbol{n_{x, t=2000}} = \textcolor{red}{\boldsymbol{\tilde{U}}}^x_{\textcolor{red}{t=2000}} \cdot \boldsymbol{\pi_{t=2000}}$$
+This assumption might not correctly reflect the age distribution of parents at different age of their child (i.e different cohorts) in the year 2000.
+
+Ideally, we would like to be able to correctly reflect any cohort of parent that could have a child aged less than 18 years old, in the year 2000 or after. Hence, the best would be to be able to start the dynamic in the year 1983. FIGURE?
+
+* From the supplementary materials of @verdery2017projections
+
+    * Use life expectancy for Black and White estimated by @national2016health for the period 1980-1999 and convert these into survival probabilities using the Coale-Demeny Model West Life Tables (or modeling methods). This leads to focus only on two ethnic groups.
+    
+    * Found birth data from CDC starting in 1950.
+    
+    * Need population counts by ethnic group from the year 1983
+
+
+
+# Number of children losing a parent
+
+
+
+# Uncertainty in estimates
+
+Monte-Carlo simulation using Chiang method and do similarly as in UN Bayesian population projection
+
+
+
+# Parents are shared: overestimation?
+
+
+
+
+# Mx of Fx having the biggest impact for Black: K-K decomposition
+
+
+
+# References
+
+
+<div id="refs"></div>
+
+
+
+
+
