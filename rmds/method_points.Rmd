@@ -46,21 +46,21 @@ Model run independently on each ethnic group
 
 
 
-# Notation for figures
+# Notation
 
-* $\boldsymbol{F_t}$ is the $(\omega \cdot \omega)$ fertility matrix, in year $t$. The first row contains the fertility rates at the different ages.
+* $\boldsymbol{F_t}$ is the $(\omega \cdot \omega)$ fertility matrix in year $t$. The first row contains the fertility rates at the different ages of reproduction.
 
 * $\boldsymbol{\tilde{U_t}}$ is a block-matrix containing the survival probabilities (and cause-specific probabilities of dying), in year $t$.
 
 * $\boldsymbol{n_t}$ is the vector of the population counts by age in year $t$. 
 
-* $\omega$ is the highest age + 1, here 86.
+* $\omega$ is the highest age + 1, here 86 yo.
 
 
 
 # Visualization convention
 
-```{r visu, warning=F, fig.cap="Arrays to visualize the parents projection"}
+```{r visu, warning=F, fig.cap="3D arrays to visualize the model"}
 ggplot() +
     ## Arrays
     geom_rect(aes(xmin = 5, xmax = 20, ymin = 5, ymax = 15),
@@ -100,13 +100,15 @@ ggplot() +
 ```
 
 
-The model assumes that we randomly select a child in the population, hence this child could be any age in year $t$. This explains the different vectors of age distribution of parents over the ages of their child in year $t$.
+The model assumes that we randomly select a child in the population, hence this child could be any age in year $t$. This explains the different vectors of age distribution of parents over the ages of their child in year $t$. An additional assumption is that the two parents are alive at the time of birth of their child.
+
+The aim of the model is to project the vector of age distribution of parents over time and age of their child.
 
 
 
 # Starting the dynamic
 
-Suppose the analysis focus on children aged <5 yo (in reality <18 yo but it simplifies the visualization).
+Suppose our analysis focuses on children aged <5 yo (<18 yo in reality but it simplifies the visualization).
 
 ```{r parents-proj, warning=F, fig.cap="Parents population projection"}
 ggplot() +
@@ -194,7 +196,7 @@ ggplot() +
     geom_rect(aes(xmin = 25, xmax = 30, ymin = 5, ymax = 55),
               color = "pink", fill = NA, size = 1.5) +
     annotate("text", x = 17.5, y = 1, 
-                 label = "Age of child we care about (<5 yo)",
+                 label = "Ages of child we care about (<5 yo)",
                  size = 3.5,
              col = "pink") +
     geom_curve(aes(x = c(11, 24), y = 2, xend = c(10,25), yend = 5),
@@ -217,184 +219,85 @@ ggplot() +
 ```
 
 
-The issue with the current case is that in the year 2000, the age distribution of parents for a child aged <5 yo might not correctly represents reality. This comes from assuming a stable population in that year to start the projection. This means that in order to obtain the vector of the age distribution of parents at age $x$ of their child in the year 2000, we assume
+The issue with the current case (Figure 2) is that in the year 2000, the age distribution of parents for a child aged <5 yo might not correctly represent the reality. This comes from assuming a stable population in that year to start the projection (no data before 2000). This means that in order to obtain the vector of the age distribution of parents at age $x$ of their child in the year 2000, we assume
 
 $$\boldsymbol{n_{x, t=2000}} = \boldsymbol{\tilde{U}}^x_{t=2000} \cdot \boldsymbol{\pi_{t=2000}}$$
 
-where $\boldsymbol{\tilde{U}_{t=2000}}$ is raised to the power equal to the age of the child.
+where $\boldsymbol{\tilde{U}_{t=2000}}$ is raised to the power equal to the age of the child, and $\boldsymbol{\pi_t}$ is the age distribution of parents of offspring (see formula in Figure 2).
 
-The optimal situation would be to start the dynamics in the year 1996 if we were to focus on children aged <5 yo (but in the year 1983 in reality as we focus on children aged <18 yo). This requires additional data that we currently don't have:
+The optimal situation would be to start the dynamics in the year 1996 (see Figure 2) if we were to focus on children aged <5 yo (but in the year 1983 in reality as we focus on children aged <18 yo). This requires additional data that we currently don't have:
 
 * Female fertility rates by age, and ethnic group for the years 1983-1999
 
-    * Found for Black, White, and Hispanic if we perform some temporal intrapolation (brth1980_2000.xlsx)
+    * Found for Black, White, and Hispanic and require to perform some temporal intrapolation (CDC: brth1980_2000.xlsx)
 
 * Population counts by age, sex, and ethnic group for the years 1983-1999
 
-    * Only found for White and require to perform some temporal intrapolation (pop1980_2016.xlsx)
+    * Only found for White and require to perform some temporal intrapolation (CDC: pop1980_2016.xlsx)
 
 * All-causes deaths (to compute mortality rates) by age, sex and ethnic group for the years 1983-1999. This could be relaxed by obtaining estimated life expectancy at birth and converting it into survival probabilities using the Coale-Demeny Model West Life Tables [@verdery2017projections]
 
-    * Before the year 2000, I will simplify the model to only look at parent surviving, not looking at parents dying from different causes. 
-
-
-
-
-# Boundary conditions of the parents' dynamic
-
-In Figure 1, color code is 
-
-* \textcolor{orange}{boundary condition 1} 
-
-* \textcolor{red}{boundary condition 2}
-
-* \textcolor{darkgray}{dynamic of the age distribution of parents}
-
-```{r bnd-cond, eval = F, warning=F, fig.cap="Boundary conditions of the parents' dynamic"}
-ggplot() +
-        ## Arrays
-        geom_rect(aes(xmin = 45, xmax = 55, ymin = 45, ymax = 55),
-                  color = "black", fill = NA) +
-        geom_rect(aes(xmin = 29, xmax = 39, ymin = 29, ymax = 39),
-                  color = "black", fill = NA) +
-        geom_rect(aes(xmin = 17, xmax = 27, ymin = 17, ymax = 27),
-                  color = "black", fill = NA) +
-        geom_rect(aes(xmin = 5, xmax = 15, ymin = 5, ymax = 15),
-                  color = "black", fill = NA) +
-        ## Vector of age distribution of parents
-        geom_rect(aes(xmin = c(5,17,29), xmax = c(6,18,30), ymin = c(5,17,29), ymax = c(15, 27, 39)),
-                  color = "black", fill = "orange") +
-        ## Boundary condition for the year 2000
-        geom_rect(aes(xmin = seq(6, 14, 1), xmax = seq(7, 15, 1), ymin = 5, ymax = 15),
-                  color = "black", fill = "red") +
-        ## Meaning of vector
-        geom_rect(aes(xmin = 20, xmax = 21, ymin = 17, ymax = 27),
-                  color = "black", fill = "darkgray") +
-        annotate("text", x = 30, y = 10, 
-                 label = "Vector of age distribution of parents (alive & dead by cause)\n at age x+1 of their child in year t+1",
-                 size = 2.5) +
-        annotate("text", x = 7.5, y = 16, 
-                 label = expression(d[x*paste(",")*t]),
-                 size = 2.5) +
-        annotate("text", x = 20.5, y = 28, 
-                 label = expression(d[x+1*paste(",")*t+1]),
-                 size = 2.5) +
-        ## Evolution of vector
-        geom_curve(aes(x = 7.5, y = 17, xend = 19.5, yend = 29),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = -0.4) +
-        geom_curve(aes(x = 20.5, y = 22, xend = 25, yend = 14),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = 0) +
-        geom_rect(aes(xmin = 33, xmax = 34, ymin = 29, ymax = 39),
-                  color = "black", fill = "darkgray") +
-        annotate("text", x = 33.5, y = 41, 
-                 label = expression(d[x+2*paste(",")*t+2]),
-                 size = 2.5) +
-        geom_curve(aes(x = 21, y = 29, xend = 33, yend = 42),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = -0.4) +
-        geom_curve(aes(x = 33.5, y = 43, xend = 42, yend = 43),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = -0.4) +
-        annotate("text", x = 10, y = 27, 
-                 label = expression(d[x*paste(",")*t]%.%tilde(U)[paste("t")]),
-                 size = 2.5) +
-        annotate("text", x = 24, y = 42, 
-                 label = expression(d[x+1*paste(",")*t+1]%.%tilde(U)[paste("t+1")]),
-                 size = 2.5) +
-        annotate("text", x = 37, y = 47, 
-                 label = expression(d[x+2*paste(",")*t+2]%.%tilde(U)[paste("t+2")]),
-                 size = 2.5) +
-        geom_rect(aes(xmin = 52, xmax = 53, ymin = 45, ymax = 55),
-                  color = "black", fill = "darkgray") +
-        annotate("text", x = 45, y = 58, 
-                 label = expression(d[x+(T-1)*paste(",")*T-1]%.%tilde(U)[paste("T-1")]),
-                 size = 2.5) +
-        geom_curve(aes(x = 43, y = 45, xend = 52, yend = 56),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = -0.4) +
-        ## From one age to the next in boundary condition
-        geom_curve(aes(x = seq(5.5, 13.5, 1), y = 4.5, xend = seq(6.5, 14.5, 1), yend = 4.5),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = 2, col = "red") +
-        ## Age distribution of parents of offsprings
-        geom_curve(aes(x = 8, y = 40, xend = c(5.5, 17.5, 29.5), yend = c(10,22,34)),
-                   arrow = arrow(length = unit(0.01, "npc"),
-                                 type = "closed"),
-                   curvature = 0, col = "orange") +
-        annotate("text", x = 5, y = 46, 
-                 label = expression(pi[t]*paste(" = ")*frac(F[t]^T*paste("(1,:)")%.%n[t], paste("|| ")*F[t]^T*paste("(1,:)")%.%n[t]*paste(" ||"))),
-                 size = 3,
-                 col = "orange") +
-        ## U_tilde matrix
-        annotate("text", x = seq(6.5, 14.5, 2.5), y = 0, 
-                 label = rep(expression(tilde(U)[paste("2000")]), 4),
-                 size = 2.5,
-                 col = "red") +
-        ## Dim
-        annotate("text", x = c(11.5, 1), y = c(17, 10), 
-                 label = c("Child age", "Parents' age"),
-                 color = c("cyan", "blue"),
-                 size = 3) +
-        ## Year dim
-        annotate("text", x = c(12, 24, 36, 52), y = c(13, 25, 37, 53), 
-                 label = c("year 2000", "year 2001", "year 2002", "year 2020"),
-                 color = "green",
-                 size = 3) +
-        geom_point(aes(x = c(41:44), y = c(41:44))) +
-        scale_x_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
-        scale_y_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
-        theme_minimal() +
-        theme(axis.title = element_blank(),
-              axis.text = element_blank())
-```
-
-
-
-## Boundary condition 2
-
-In order to start the dynamics, we assume that the earliest vital rates have been operating for a long period before the year 2000. This means that in order to obtain the vector of the age distribution of parents at age $x$ of their child in the year 2000, we assume
-
-$$\boldsymbol{n_{x, t=2000}} = \textcolor{red}{\boldsymbol{\tilde{U}}}^x_{\textcolor{red}{t=2000}} \cdot \boldsymbol{\pi_{t=2000}}$$
-
-where $\textcolor{red}{\boldsymbol{\tilde{U}}_{t=2000}}$ is raised to the power equal to the age of the child.
-
-This assumption might not correctly reflect the age distribution of parents at different age of their child (i.e different cohorts) in the year 2000.
-
-Ideally, we would like to be able to correctly reflect any cohort of parent that could have a child aged less than 18 years old, in the year 2000 or after. Hence, the best would be to be able to start the dynamic in the year 1983. FIGURE?
-
-* From the supplementary materials of @verdery2017projections
-
-    * Use life expectancy for Black and White estimated by @national2016health for the period 1983-1999 and convert these into survival probabilities using the Coale-Demeny Model West Life Tables (or modeling methods?). This leads to focus on only two ethnic groups.
-    
-    * Found fertility data from CDC starting in 1950.
-    
-    * Need population counts by ethnic group from the year 1983
+    * Before the year 2000, I will simplify the model to only look at parents surviving, not accounting for parents' death. This nevertheless allows to obtain more realistic age distributions of parents of children aged <18 yo in the year 2000.
 
 
 
 # Number of children losing a parent
 
-* Found real number of births 2000-2015 Black & White non Hispanic (t5_birth_2015_1989.pdf)
+Following a similar method as in @alburez2021women, we want to compute the number of children aged 1 yo, <5 yo, and <18 yo losing a parent ($CLP_x$) over the years and ethnic groups. This requires additional data:
 
-* Found real number of births 2016-2020 all ethnic groups 2016-2020 t1_birth_2021_2016.pdf)
+* Found real number of births 2000-2015 for Black & White non Hispanic (CDC: t5_birth_2015_1989.pdf)
+
+* Found real number of births 2016-2020 for all ethnic groups (CDC: t1_birth_2021_2016.pdf)
+
+The computation is visualized for children aged <5 yo belonging to the cohort born in the year 2000 (Figure 3). The calculation follows the steps below,
+
+1. Get the number of births ($B$) in year 2000
+
+2. Compute the fraction of cohort surviving ($l_{x}$) from period mortality rates (blue squares in Figure 3), both sexes combined (a randomly selected child could be any sex)
+
+3.  Get the number of parental deaths by cause at age $x$ of a child ($d_D(x)$) from the matrix kinship model
+
+4. Compute $CLP_x = \sum^5_{x=0}(l_{x}*B)*d_D(x)$
 
 
+```{r period-mx, warning=F, fig.cap="Cohort rates approximated by period rates"}
+library(LexisPlotR)
 
-# Sensitivity
+polygons <- data.frame(x = c("2000-01-01", "2001-01-01", "2001-01-01", "2000-01-01",
+                             "2001-01-01", "2002-01-01", "2002-01-01", "2001-01-01",
+                             "2002-01-01", "2003-01-01", "2003-01-01", "2002-01-01",
+                             "2003-01-01", "2004-01-01", "2004-01-01", "2003-01-01",
+                             "2004-01-01", "2005-01-01", "2005-01-01", "2004-01-01"),
+                       y = c(0, 0, 1, 1,
+                             1, 1, 2, 2,
+                             2, 2, 3, 3,
+                             3, 3, 4, 4,
+                             4, 4, 5, 5),
+                       group = c(rep(1, 4), rep(2, 4), rep(3, 4), rep(4,4), rep(5, 4)))
 
-Focusing on parents means that fertility enters the model only through the first boundary condition: the age distribution of parents at the birth of their child (\textcolor{orange}{$\pi_t$}). 
+lexis <- lexis_grid(year_start = 2000, year_end = 2005, age_start = 0, age_end = 5) %>% 
+        lexis_cohort(cohort = 2000) %>% 
+        lexis_polygon(x = polygons$x, y = polygons$y, group = polygons$group)
+lexis <- lexis + 
+    labs(x = "Year", y = "Age") +
+    annotate("text", x = as.Date('2000-07-01', '%Y-%m-%d'), y = 0.2, 
+                 label = "B",
+                 size = 3) +
+    annotate("text", x = as.Date('2001-07-10', '%Y-%m-%d'), y = 1.2, 
+                 label = expression(B%.%l[1]),
+                 size = 3) +
+    annotate("text", x = as.Date('2002-07-01', '%Y-%m-%d'), y = 2.2, 
+                 label = expression(B%.%l[2]),
+                 size = 3) +
+    annotate("text", x = as.Date('2003-07-01', '%Y-%m-%d'), y = 3.2, 
+                 label = expression(B%.%l[3]),
+                 size = 3) +
+    annotate("text", x = as.Date('2004-07-01', '%Y-%m-%d'), y = 4.2, 
+                 label = expression(B%.%l[4]),
+                 size = 3)
+lexis
 
-Currently, the kin dynamics consists of a full two-sex model ($\boldsymbol{F^f_t}$ and $\boldsymbol{F^m_t}$). Male fertility rates = shifted female fertility rates. The shift is equal to the difference in the mean age at childbearing between the two sexes. The shifts are modeled with a linear model over the years (data from the UN Demographic Yearbook).\
-
-* Sensitivity analysis: use female fertility rates to compute both female and male age distribution at the birth of their child.
+```
 
 
 
@@ -403,18 +306,28 @@ Currently, the kin dynamics consists of a full two-sex model ($\boldsymbol{F^f_t
 We can simulate an i-th series of death counts for every combination of sex, ethnic group, year, and cause of death (other, drugs, firearms) at all ages using the Chiang method [@chiang1984life] as follows:
 
 $${}_nD_{x,i} \sim Binomial(\frac{{}_nD_{x,i}}{{}_nq_{x}}, {}_nq_{x})$$
-We repeat this procedure $N_{sim}$ times for each combination and obtain  $N_{sim}$ associated survival probabilities and cause-specific probabilities of dying that we can use as inputs in the matrix kinship model. 
+We repeat this procedure $N_{sim}$ times for each combination and obtain  $N_{sim}$ associated survival probabilities and cause-specific probabilities of dying that we can use as inputs in the matrix kinship model (use the Poisson distribution to do the same for the fertility rates?)
 
-This is similar to the UN WPP using Bayesian prosterior draws as inputs for the cohort-component model.  
+This is similar to the UN WPP projectionss using Bayesian prosterior draws as inputs for the cohort-component model.  
 
-
-
-# Parents are shared: overestimation?
-
-Check assumption taken in paper
+Note that this allows to account for the stochasticity stemming from the mortality rates but not from projecting a small population of kin (parents).
 
 
-# Mx of Fx having the biggest impact for Black: K-K decomposition
+
+# Kitagawa-Keyfitz decomposition
+
+Contribution of $m_x$, $F_x$, and the population structure in the difference in outputs between Black and White.
+
+
+# Male fertility
+
+Focusing on parents means that fertility enters the model only through the age distribution of parents at the birth of their child ($\pi_t$). 
+
+Currently, the kin dynamics consists of a full two-sex model ($\boldsymbol{F^f_t}$ and $\boldsymbol{F^m_t}$). Male fertility rates = shifted female fertility rates. The shift is equal to the difference in the mean age at childbearing between the two sexes. The shifts are modeled with a linear model over the years (data from the UN Demographic Yearbook).\
+
+* Sensitivity analysis: use female fertility rates to compute both female and male age distribution at the birth of their child.
+
+* A call with Bruno Schoumaker is possible to substantially refine the computation of male fertility rates (using IPUMS data).
 
 
 
