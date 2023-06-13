@@ -50,11 +50,14 @@ Model run independently on each ethnic group
 
 * $\boldsymbol{F_t}$ is the $(\omega \cdot \omega)$ fertility matrix in year $t$. The first row contains the fertility rates at the different ages of reproduction.
 
-* $\boldsymbol{\tilde{U_t}}$ is a block-matrix containing the survival probabilities (and cause-specific probabilities of dying), in year $t$.
+* $\boldsymbol{\tilde{U_t}}$ is a  $((2\omega+2\omega\alpha) \cdot (2\omega+2\omega\alpha))$ block-matrix containing the survival probabilities (and cause-specific probabilities of dying), in year $t$.
 
 * $\boldsymbol{n_t}$ is the vector of the population counts by age in year $t$. 
 
+* $\boldsymbol{\pi_t}$ is the $(2\omega \cdot 1)$ vector of age distribution of parents of offspring in year $t$.
+
 * $\omega$ is the highest age + 1, here 86 yo.
+
 
 
 
@@ -245,7 +248,7 @@ The optimal situation would be to start the dynamics in the year 1996 (see Figur
 
 Following a similar method as in @alburez2021women, we want to compute the number of children aged 1 yo, <5 yo, and <18 yo losing a parent ($CLP_x$) over the years and ethnic groups. This requires additional data:
 
-* Found real number of births 2000-2015 for Black & White non Hispanic (CDC: t5_birth_2015_1989.pdf)
+* Found real number of births 2000-2015 for Black & White non Hispanic and Hispanic (CDC: t5_birth_2015_1989.pdf)
 
 * Found real number of births 2016-2020 for all ethnic groups (CDC: t1_birth_2021_2016.pdf)
 
@@ -316,7 +319,7 @@ Note that this allows to account for the stochasticity stemming from the mortali
 
 # Kitagawa-Keyfitz decomposition
 
-Contribution of $m_x$, $F_x$, and the population structure in the difference in outputs between Black and White.
+Contribution of $m_x$, $F_x$, and the population structure in the difference in outputs between Black and White [@kitagawa1955components; @caswell2010life].
 
 
 # Male fertility
