@@ -6,4 +6,5 @@
 \contentsline {section}{Uncertainty in estimates}{5}{section*.7}%
 \contentsline {section}{Kitagawa-Keyfitz decomposition}{5}{section*.8}%
 \contentsline {section}{Male fertility}{6}{section*.9}%
-\contentsline {section}{References}{6}{section*.10}%
+\contentsline {section}{Points from call}{6}{section*.10}%
+\contentsline {section}{References}{6}{section*.11}%

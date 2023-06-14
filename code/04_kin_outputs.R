@@ -36,6 +36,7 @@ for(p in packages){
 lt.US <- readRDS(here("data_private", "lt_US.rda"))
 d_x_t <- readRDS(here("data_private", "d_x_t.rda"))
 fx.US <- readRDS(here("data", "fx_US.rda"))
+brth.US <- readRDS(here("data", "birth_US.rda"))
 
 
 
@@ -352,9 +353,11 @@ options(dplyr.summarise.inform = FALSE)
 for (r in races) {
         ## Cohort perspective requires to stop in 2017
         ## when focusing on children aged <5 yo
-        for (y in head(years, -3)) {
+        for (y in years) {
 
-               df.temp <- get_df_nber_children(y, r, lt.US, fx.US) 
+                ## Using the cohort version of the function would
+                ## require to stop looping in year 2017
+               df.temp <- get_df_nber_children_p(y, r, lt.US, fx.US, brth.US) 
                df.children.losing.parent <- rbind(df.children.losing.parent, df.temp)
         }
 }

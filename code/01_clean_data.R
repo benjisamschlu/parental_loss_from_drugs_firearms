@@ -43,7 +43,7 @@ rm(list = ls())
 
 ## Install/load packages
 packages <- c("tidyverse", "ggplot2", "here", "openxlsx", "readxl", "Matrix",
-              "pracma")
+              "pracma", "pdftools")
 for(p in packages){
         if(!require(p,character.only = TRUE)) install.packages(p)
         library(p,character.only = TRUE)
@@ -359,6 +359,108 @@ mac.m.dyb <- sapply(years.dyb, function(y) {
 },
 simplify = T, USE.NAMES = TRUE)
 
+## Birth counts data come from two CDC National Vital Statistics Reports
+## Years 1999:2015 come from National Vital Statistics Reports Vol 66, Nber 1
+## Table 5 on p.24 
+## Years 2016:2020 come from National Vital Statistics Reports Vol 72, Nber 1
+## Table 1 on p.12 
+
+## Years 1999-2015
+
+txt <- pdf_text(here("data_raw", "t5_birth_2015_1989.pdf"))
+
+## Table 5 is on page 24
+table <- txt[24]
+# cat(table5)
+
+## Split the text into a one raw text matrix
+text_matrix <- table %>% str_split("\\n", simplify = TRUE)
+## Locate the start and end of the table
+## ! make sure only one occurence or specify which one it is !
+table_start <- text_matrix %>% 
+        str_which("2015. . . . . . . . . . . . . . . . . . . . . . . . . . . . .")
+table_end <- text_matrix %>% 
+        str_which("611,269")
+
+## Extract table text
+table_raw <- text_matrix[1, table_start:table_end] %>%
+        ## Remove period/dots next to dates
+        str_replace_all(.,'[\\.,]','') %>% 
+        ## Replace space with "|"
+        str_replace_all("\\s{2,}", "|")
+## Names of cols from PDF
+column.names <- c("year", "total",
+                  "hispanic", "mexican", "puertorican", "cuban", "csamerican", "other",
+                  "nh", "white", "black")
+## Create text connection so that the text can be read back with read.csv()
+df.brth.2015 <- table_raw %>% 
+        textConnection() %>% 
+        read.csv(sep = "|", 
+                 header = FALSE,
+                 col.names = column.names) %>%
+        as_tibble() %>% 
+        ## Only look at years where we have mortality
+        ## from opioids and firearms
+        filter(year %in% 1999:2020) %>% 
+        ## Only keep Hispanic, Black, and White
+        dplyr::select(year, hispanic, white, black, total) %>% 
+        ## Define variables as numeric
+        mutate(across(colnames(.), ~ as.numeric(.))) %>% 
+        pivot_longer(hispanic:total, names_to = "race_eth", values_to = "births")
+
+## Years 2016-2020
+
+txt <- pdf_text(here("data_raw", "t1_birth_2021_2016.pdf"))
+## Table 1 is on p.12
+table <- txt[12]
+
+## Split the text into a one raw text matrix
+text_matrix <- table %>% str_split("\\n", simplify = TRUE)
+## Locate the start and end of the table
+table_start <- text_matrix %>% 
+        str_which("All races and origins")
+table_end <- text_matrix %>% 
+        str_which("70.6")
+
+## Extract table text
+table_raw <- text_matrix[1, table_start:table_end] %>%
+        ## Remove period/dots next to dates
+        str_replace_all(.,'[\\.,]','') %>% 
+        ## Replace space with "|"
+        str_replace_all("\\s{2,}", "|") 
+## Remove lines without data
+table_raw <- table_raw[-c(1, 14, 15, 22, 29, 36, 43, 50)]
+## Some rows have "|" before the year, remove it
+table_raw[13:42] <- sub("^.", "", table_raw[13:42])
+
+## Names of cols from PDF
+column.names <- c("year", "births", "birthrate", "fertilityrate")
+## Years extracted in this pdf
+years.brth <- 2016:2020
+## Create text connection so that the text can be read back with read.csv()
+df.brth.2020 <- table_raw %>% 
+        textConnection() %>% 
+        read.csv(sep = "|", 
+                 col.names = column.names,
+                 header = FALSE) %>%
+        as_tibble() %>% 
+        ## Only look at years in 2016-2020
+        filter(year %in% as.character(years.brth)) %>% 
+        ## Only keep births
+        dplyr::select(year, births) %>% 
+        ## Define ethnic group
+        ## !! Same order as in source table !!
+        mutate(race_eth = rep(c("total", "white", "black", "aian", "a", "pi", "hispanic"), 
+                              each = length(years.brth))) %>% 
+        ## Only keep ethnic groups of interest
+        filter(race_eth %in% c("total", "white", "black", "hispanic"))
+
+## Rbind the two tidy data sets
+df.brth <- rbind(df.brth.2015,
+                 df.brth.2020) %>% 
+        arrange(year)
+
+
 
 
 ## Key dimensions for code ---------------------------------------------------------
@@ -493,3 +595,5 @@ saveRDS(fx.int,
         here("data", "fx_US.rda"))
 saveRDS(df.fitted.diff.mac,
         here("data", "mac_US.rda"))
+saveRDS(df.brth,
+        here("data", "birth_US.rda"))

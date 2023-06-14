@@ -179,7 +179,7 @@ get_pi <- function(ages, asfr, lifeTable, y, r) {
 ##    size of each child birth cohort. Look at male
 ##    and female children together (life table both sexes
 ##    combined)
-get_df_nber_children <- function(y, r, lifeTable, asfr) {
+get_df_nber_children <- function(y, r, lifeTable, asfr, births) {
         
         ## Focus on age group <5 to be able to go until year 2017
         ## with a cohort perspective
@@ -214,21 +214,77 @@ get_df_nber_children <- function(y, r, lifeTable, asfr) {
         lx = cumprod(c(1, px))
         
         ## Get total birth using female fx and pop
-        birth <- asfr %>% 
-                filter(sex == "female",
-                       ## Birth cohort
-                       year == y,
+        B <- births %>% 
+                filter(year == y,
                        race_eth == r) %>% 
-                left_join(lt.US %>% 
-                                  dplyr::select(year, race_eth, sex, age, pop),
-                          by = c("year", "race_eth", "sex", "age")) %>% 
-                mutate(birth = fx * pop) %>% 
-                group_by(year) %>% 
-                summarise(birth = sum(birth)) %>% 
-                pull(birth)
+                pull(births)
         
         ## Compute nber of surviving children
-        surv.children <- lx * birth
+        surv.children <- lx * B
+        
+        ## Container
+        child.losing.parent <- array(NA,
+                                     dim = c(alpha, 5, n.sex),
+                                     dimnames = list("cause" = c("other", "drugs", "firearms"),
+                                                     "focal age" = 0:4,
+                                                     "sex" = c("mother", "father")))
+        for (s in 1:n.sex) {
+                
+                ## Vector allowing to sum over all parent's ages
+                ## by cause
+                sum.vec <- (t(rep(1, omega)) %x% diag(alpha))
+                
+                ## Sum over all parent's age by cause
+                dist.dth.cause <- sum.vec %*% d_x_t[rows.dead.sex[[s]], 1:5, which(y == years), r] 
+                
+                ## Loop over the ages: 0 -> 4 yo
+                child.losing.parent[,,s] <- sapply(1:5, function(j) {
+                        
+                        surv.children[j] * dist.dth.cause[,j]
+                })
+                
+        }
+        out <- as.data.frame.table(child.losing.parent) %>% 
+                rename("N" = Freq) %>% 
+                mutate(race = r,
+                       year = y)
+        return(out)
+}
+
+## Same fct with a period perspective
+get_df_nber_children_p <- function(y, r, lifeTable, asfr, births) {
+        
+        ## Get period mx for children 
+        ## aged <5 yo, both sexes combined
+        mx.period <- lifeTable %>% 
+                filter(year == y,
+                       race_eth == r,
+                       age < 4) %>% 
+                ## Sum over sexes
+                group_by(year, race_eth, age) %>% 
+                summarise(n_deaths = sum(n_deaths),
+                          pop = sum(pop)) %>% 
+                ungroup() %>% 
+                ## Mx two sexes
+                mutate(mx = n_deaths/pop) %>% 
+                pull(mx)
+        
+        ## Build period life table for age <5 yo
+        ax = c(0.07 + 1.7*mx.period[1], rep(0.5, 3))
+        n = rep(1, 4)
+        qx = (n * mx.period)/(1 + (n - ax) * mx.period)
+        px = 1 - qx
+        ## Fraction surviving
+        lx = cumprod(c(1, px))
+        
+        ## Get total birth using female fx and pop
+        B <- births %>% 
+                filter(year == y,
+                       race_eth == r) %>% 
+                pull(births)
+        
+        ## Compute nber of surviving children
+        surv.children <- lx * B
         
         ## Container
         child.losing.parent <- array(NA,

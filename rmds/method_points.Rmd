@@ -334,6 +334,44 @@ Currently, the kin dynamics consists of a full two-sex model ($\boldsymbol{F^f_t
 
 
 
+# Points from call
+
+* Matt will send the data starting in 1990 (Hispanic have not been well recorded before)
+
+* Monica will look to see if she can find the age distribution of parents to compare it with the outputs of the model (validation with empirical data)
+
+* Ben will
+
+    * Add uncertainty (Monte-Carlo simulation)
+    
+    * Extend period (<1999 only look at survival)
+    
+    * Sensitivity analysis (stable assumption vs real rates focusing on <5 yo)
+
+    * Period perspective on the number of children losing a parent (clear x-axis for the figure, share of kids born in year t but number maybe better for public health audiance) -- DONE
+
+* Foster care stops at 16 yo, hence focus on <17 yo
+
+* Paper should have 4 figures (having uncertainty intervals)
+
+    * Fig 1 could be cumulative impact over the years (1999-2020)
+    
+    * Fig 2 might show the evolution over time (area plot/stack to get total and drop sex)
+    
+    * Fig 3-4 should show that the results are robust
+
+* Dirichlet distribution could be used to account for the stochasticity in projecting a kin population (parents consist of a small population)
+
+* Framing 
+
+1. Mortality from Opioids have been going up for a long time with last 5 years showing a rapid increase, especially among young individuals
+
+2. We will look at an indirect impact of opioids and firearms: bereavement
+
+3. Kinship perspective makes it possible to look at a multiplicative effect: high fertility means the loss of a parent is shared by more children
+
+
+
 # References
 
 
