@@ -1,0 +1,98 @@
+---
+title: "Racial/Ethnic disparities in children's experience of parent death: the role of drugs and firearms in the US"
+author: "Ben Schlüter"
+date: "2023-06-16"
+toc: false
+output: 
+        pdf_document:
+                extra_dependencies: ["float"]
+bibliography: abstractRefs.bib
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "H", out.extra = "")
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
+
+## Load packages ---------------------------------------------------------------
+
+## Install/load packages
+packages <- c("tidyverse", "ggplot2", "here", "viridis")
+for(p in packages){
+        if(!require(p,character.only = TRUE)) install.packages(p)
+        library(p,character.only = TRUE)
+}
+
+```
+
+
+
+# Introduction
+
+During the last two decades, death rates in the United States (U.S.) have declined more slowly compared to other high-income countries [@heuveline2023covid; @preston2021excess]. This relatively worse performance is in part explained by high death rates from both intentional and unintentional injuries [@richardson2011homicide; @ho2019contemporary] with the leading cause being drug overdose [@ho2019contemporary].  
+The overall mortality rate for unintentional drug poisonings grew exponentially from 1979 through 2016 [@jalal2018changing], reaching 17 per 100,000 population with no sign of leveling off [@hedegaard2021drug]. Looking at the trend of mortality from individual drugs offers a contrasting picture. Cocaine-being a leading cause in the early 2000s-was overtaken successively by prescription opioids, then heroin, and then synthetic opioids such as fentanyl [@jalal2018changing]. Since 2016, we observe an even more rapid increase in both drug- and opioid-related mortality [@spencer2023estimates]. Focusing on individual drugs further highlights that the geographic pattern of mortality is drug-specific with the eastern United States having experienced a sharp increase in synthetic opioids-related mortality [@kiang2019assessment].  
+Similarly, intentional injuries in form of firearm mortality has been increasing since 2015 after having been relatively steady during the start of the 21st century [@goldstick2019us]. Gun-related deaths reached 48,830 in 2021, an increase of 8% from 2020 [@CDC2021mult]. In the year 2021, age groups with the highest gun-related mortality rate were 15-24 and 25-34 years old at 23.5 and 24.8 deaths per 100,000 population, respectively [@CDC2021mult]. These national trends hide important geographical heterogeneity with counties in the West and Midwest showing increase in firearm suicide and countries in Southeast experiencing increase in firearm homicide [@degli2022county]. More recently, research has found increases in both gun-related mortality and opioid-related mortality among children and adolescents with gun-related mortality as the number one cause of death [@goldstick2022current; @friedman2022trends].
+
+The worse health performance of the U.S. could also be apprehended in terms of racial and economic inequalities. These two types of disparities have been made extremely visible during the COVID-19 pandemic [@chen2021revealing; @aschmann2022dynamics; @siegel2022actual; @goldman2022lifeexp; @wrigley2020us]. Comparing racial subgroups in term of their life expectancy at birth suggests that the risk of dying is not uniformly distributed across the American population. In 2019, there was a 4-year gap in life expectancy between Black non-Hispanic and White non-Hispanic [@arias2022USlifetable]. This suggests that the different ethnic groups are not equally impacted by the specific causes of mortality discussed earlier. For example, during the period 1981-2020, the Black population had a firearm-related homicide death rate that was on average seven times higher than the White population [@rees2022trends]. This differential in mortality seems to have been exacerbated during the COVID-19 pandemic [@young2022us; @chen2022racial]. The opioid epidemic in the US is also characterized by racial differences. In the earlier stage of the epidemic, the White american population was mostly affected through a prescription drug problem. More recently, both Black and White population are affected following the shift to a heroin/fentanyl epidemic [@alexander2018trends].
+
+The varying levels of mortality experienced by the different ethnic groups translates into differing exposure to deaths in the family [@umberson2017death]. In other words, the racial inequalities translate into kinship inequalities which refers to "the differences in kin presence,  availability,  and  resources  that  create  distinct  environments  for  individuals  to develop, support each other, and obtain a sense of shared identity" [@alburez2022kin]. More precisely, kin loss in childhood affect educational attainment in later life [@patterson2020linked], has medical  and  psychological  implications [@umberson2017death], and reduce economic support for kin [@zagheni2011impact]. While the direct effects of guns and drugs on child health has been well-documented, less is known about the indirect effect of gun and drug deaths through bereavement.
+
+In the current paper, we will study  firearms and drugs mortality from a kinship perspective. We will assess the children's experience of parental loss due to firearms and drugs in the U.S. during the period 1999-2020, stratifying by ethnic group. To do so, we used the matrix kinship model developed by @caswell2019formal using time-variant, sex-differentiated vital rates [@caswell2021formal; @caswell2022formal], and augmented to include causes of death of kin [@caswell2023formal].
+    
+
+
+
+# Methods
+
+We use the kinship matrix model developed by @caswell2019formal. This methodology builds on the fact that any type of kin of a randomly chosen individual can be seen as a population. Hence, they can be modeled using traditional projection methods. The kin we will focus on are parents.  
+The model used here combine several extensions to use time-varying and sex-differentiated vital rates while accounting for death from multiple causes [@caswell2021formal; @caswell2022formal; @caswell2023formal]. DETERMINISTIC. The model can be expressed as follows
+
+$$\begin{pmatrix} \boldsymbol{d}^f_L \\ 
+\boldsymbol{d}^m_L \\ 
+\hline \hat{\boldsymbol{d}^f_D} \\ 
+\hat{\boldsymbol{d}^m_D} 
+\end{pmatrix}(x+1, t+1) = 
+\left(\begin{array}{@{}c|c@{}}
+  \begin{matrix} 
+  \boldsymbol{U}^f_{\omega \times \omega} & \boldsymbol{0} \\ 
+  \boldsymbol{0} & \boldsymbol{U}^f_{\omega \times \omega} 
+  \end{matrix} & \Large{0} \\
+\hline
+\begin{matrix} 
+  \hat{\boldsymbol{M}}^f_{\alpha\omega \times \omega} & \boldsymbol{0} \\ 
+  \boldsymbol{0} & \hat{\boldsymbol{M}}^m_{\alpha\omega \times \omega} 
+  \end{matrix} & \Large0 \\
+\end{array}\right)
+\begin{pmatrix} \boldsymbol{d}^f_L \\ 
+\boldsymbol{d}^m_L \\ 
+\hline \hat{\boldsymbol{d}^f_D} \\ 
+\hat{\boldsymbol{d}^m_D} 
+\end{pmatrix}(x, t)$$
+where 
+
+## Data
+
+## Matrix Kinship Model
+
+### Male fertility
+
+### (Number of children affected)
+
+### Uncertainty
+
+
+
+# Results               
+
+## Fig 1
+
+## Fig 2
+
+
+
+
+# References
+
+<div id="refs"></div>

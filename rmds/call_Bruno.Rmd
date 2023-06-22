@@ -1,0 +1,120 @@
+---
+title: "Male age-specific fertility rates"
+subtitle: "Call with Bruno"
+toc: false
+output: 
+        pdf_document:
+                extra_dependencies: ["float"]
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "H", out.extra = "")
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
+
+## Load packages ---------------------------------------------------------------
+
+## Install/load packages
+packages <- c("tidyverse", "ggplot2", "here", "viridis")
+for(p in packages){
+        if(!require(p,character.only = TRUE)) install.packages(p)
+        library(p,character.only = TRUE)
+}
+
+```
+
+
+
+# Own child method
+
+$$f_{a-x}(t-x) = \frac{\frac{C_{x,a}(t)}{L_x}}{W_a(t)\frac{L^f_{a-x-0.5}}{L^f_{a-0.5}}}$$
+where $C_{x,a}(t)$ are own children aged $x$ of women aged $a$ enumerated in a census conducted at time $t$,
+
+$W_a(t)$ are women aged $a$ at $t$,
+
+$L_x$ inflates the numerator to account for the children dying,
+
+similarly $\frac{L^f_{a-x-0.5}}{L^f_{a-0.5}}$ inflates the denominator to account for the mothers dying.
+
+* Perform this computation for males
+
+* $L_x$ comes from period life table in year $t-x$?
+
+* $L^f_x$ comes from period life table in year $t-a$? (might be an issue to get it by ethnic group)
+
+* Correction for unmatched children? (Higher for the case of father?)
+
+* Sum $f_{a-x}$ over reproductive ages in year $t-x$ and get proportionate AFSR, $f_x^{Om}(t-x)$?
+
+
+```{r period-mx, warning=F, fig.cap="Visualization of formula"}
+library(LexisPlotR)
+library(ggplot2)
+library(tidyverse)
+
+lexis <- lexis_grid(year_start = 1960, year_end = 1996, age_start = 0, age_end = 36) %>% 
+        lexis_cohort(cohort = 1960) %>% 
+         lexis_lifeline(birth = "1990-01-01", lwd = 1.5) %>% 
+        lexis_year(year = 1995)
+lexis <- lexis + 
+    labs(x = "Year", y = "Age") +
+    annotate("text", x = as.Date('1990-01-01', '%Y-%m-%d'), y = 30, 
+                 label = "a-x",
+                 size = 5,
+             col = "red4") +
+    annotate("text", x = as.Date('1995-01-01', '%Y-%m-%d'), y = 5, 
+                 label = "x",
+                 size = 5,
+             col = "red4") +
+    annotate("text", x = as.Date('1995-01-01', '%Y-%m-%d'), y = 35, 
+                 label = "a",
+                 size = 5,
+             col = "red4") +
+        annotate("text", x = as.Date('1995-06-15', '%Y-%m-%d'), y = 20, 
+                 label = "t",
+                 size = 5,
+             col = "red4") +
+        theme(axis.text.x = element_text(angle = -45, size = 7))
+lexis
+
+```
+
+
+
+## Required data
+
+* Number of children in single years by age of their fathers in single years (matched children)
+
+* Number of children not living with their fathers by single years (unmatched children)
+
+* Total number of women by single years
+
+* Level of mortality both sexes and for female
+
+
+
+# Schoumaker (2019)
+
+$$TFR^m(t) = \frac{B(t)}{\sum^{79}_{x=15}f_x^{Om}(t) \cdot M_x(t)}$$
+
+$$ASFR_x(t) = TFR^m(t) \cdot f_x^{Om}(t)$$
+
+* Use own-child method to get both $TFR^m(t)$ and $f_x^{Om}(t)$? Or directly to get $f^m_x(t)$?
+
+
+
+# Points from call
+
+* IPUMS: American community survey (yearly)
+
+    * Apply own-child method per ethnic group
+    
+    * Reverse survival on 5 years
+    
+    * Var $poploc$ for children <5 years old
+    
+    * 80% live with their father
+    
+    * 20% have dead father/father living in another HH: need to be redistributed

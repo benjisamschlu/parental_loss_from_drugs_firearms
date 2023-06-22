@@ -1,0 +1,25 @@
+---
+title: "Racial/Ethnic disparities in children's experience of parent death: the role of drugs and firearms in the US"
+author: "Ben Schlüter"
+date: "2023-06-16"
+toc: false
+output: 
+        pdf_document:
+                extra_dependencies: ["float"]
+---
+
+Firearms and drugs are major causes of death in US.
+
+Heterogeneous level of mortality from these causes across ethic groups.
+
+Translate into differing exposure to deaths in the family.
+
+Here we study children's experience of parental loss, 1999-2020.
+
+Kinship matrix model.
+
+Matters because
+
+Results
+
+Implications
